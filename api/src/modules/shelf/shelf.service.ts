@@ -36,22 +36,18 @@ export class ShelfService {
   }
 
   async update(id: number, input: UpdateShelfEntryInput) {
-    const entry = await this.repository.findById(id);
-    if (!entry) throw notFound(`Shelf entry ${id} does not exist`);
-
     const now = this.clock();
-    const state = applyReadingChange(
-      entry,
-      { status: input.status, currentPage: input.currentPage, totalPages: input.totalPages },
-      now,
-    );
     const updated = await this.repository.update(
       id,
-      {
-        ...state,
+      (entry) => ({
+        ...applyReadingChange(
+          entry,
+          { status: input.status, currentPage: input.currentPage, totalPages: input.totalPages },
+          now,
+        ),
         rating: input.rating !== undefined ? input.rating : entry.rating,
         note: input.note !== undefined ? input.note || null : entry.note,
-      },
+      }),
       now,
     );
     if (!updated) throw notFound(`Shelf entry ${id} does not exist`);

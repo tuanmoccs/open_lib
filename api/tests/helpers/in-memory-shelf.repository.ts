@@ -48,10 +48,10 @@ export class InMemoryShelfRepository implements ShelfRepository {
     return entry;
   }
 
-  async update(id: number, values: ShelfEntryValues, now: Date) {
+  async update(id: number, apply: (entry: ShelfEntry) => ShelfEntryValues, now: Date) {
     const entry = this.entries.get(id);
     if (!entry) return null;
-    const updated = { ...entry, ...values, updatedAt: now };
+    const updated = { ...entry, ...apply(entry), updatedAt: now };
     this.entries.set(id, updated);
     return updated;
   }

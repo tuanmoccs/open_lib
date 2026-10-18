@@ -61,7 +61,11 @@ export function applyReadingChange(
   if (totalPages !== null) {
     if (change.status === 'read') {
       currentPage = totalPages;
-    } else if (status === 'read' && change.status === undefined && change.currentPage === undefined) {
+    } else if (
+      status === 'read' &&
+      change.status === undefined &&
+      change.currentPage === undefined
+    ) {
       // A finished book stays complete when its page count is corrected.
       currentPage = totalPages;
     } else if (pagesChanged && currentPage === totalPages) {

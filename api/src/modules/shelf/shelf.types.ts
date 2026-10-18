@@ -31,6 +31,14 @@ export interface ShelfRepository {
   countByStatus(): Promise<Record<ShelfStatus, number>>;
   /** Throws CONFLICT when the book is already on the shelf. */
   create(book: BookSnapshot, values: ShelfEntryValues, now: Date): Promise<ShelfEntry>;
-  update(id: number, values: ShelfEntryValues, now: Date): Promise<ShelfEntry | null>;
+  /**
+   * Reads the entry, computes the new values and writes them atomically (row lock),
+   * so concurrent updates cannot overwrite each other. Returns null when the entry is missing.
+   */
+  update(
+    id: number,
+    apply: (entry: ShelfEntry) => ShelfEntryValues,
+    now: Date,
+  ): Promise<ShelfEntry | null>;
   delete(id: number): Promise<boolean>;
 }

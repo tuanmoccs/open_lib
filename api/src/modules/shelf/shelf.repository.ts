@@ -1,3 +1,4 @@
+import type { Knex } from 'knex';
 import type { Db } from '../../db/knex';
 import { conflict } from '../../lib/errors';
 import { SHELF_STATUSES, type ShelfStatus } from './shelf.rules';
@@ -63,8 +64,8 @@ function toEntryColumns(values: ShelfEntryValues) {
 export class KnexShelfRepository implements ShelfRepository {
   constructor(private readonly db: Db) {}
 
-  private baseQuery() {
-    return this.db('shelf_entries as e')
+  private baseQuery(db: Knex = this.db) {
+    return db('shelf_entries as e')
       .join('books as b', 'b.id', 'e.book_id')
       .select<ShelfRow[]>(
         'e.id',
@@ -170,11 +171,17 @@ export class KnexShelfRepository implements ShelfRepository {
     return (await this.findById(id))!;
   }
 
-  async update(id: number, values: ShelfEntryValues, now: Date) {
-    const affected = await this.db('shelf_entries')
-      .where('id', id)
-      .update({ ...toEntryColumns(values), updated_at: now });
-    return affected > 0 ? this.findById(id) : null;
+  async update(id: number, apply: (entry: ShelfEntry) => ShelfEntryValues, now: Date) {
+    return this.db.transaction(async (trx) => {
+      const row = await this.baseQuery(trx).where('e.id', id).forUpdate().first();
+      if (!row) return null;
+      const values = apply(toEntry(row));
+      await trx('shelf_entries')
+        .where('id', id)
+        .update({ ...toEntryColumns(values), updated_at: now });
+      const updated = await this.baseQuery(trx).where('e.id', id).first();
+      return toEntry(updated!);
+    });
   }
 
   async delete(id: number) {
