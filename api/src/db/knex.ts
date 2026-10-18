@@ -1,7 +1,9 @@
 import knex, { type Knex } from 'knex';
 import type { Env } from '../config/env';
 
-export function createDb(env: Pick<Env, 'DB_HOST' | 'DB_PORT' | 'DB_USER' | 'DB_PASSWORD' | 'DB_NAME'>) {
+export function createDb(
+  env: Pick<Env, 'DB_HOST' | 'DB_PORT' | 'DB_USER' | 'DB_PASSWORD' | 'DB_NAME'>,
+) {
   return knex({
     client: 'mysql2',
     connection: {

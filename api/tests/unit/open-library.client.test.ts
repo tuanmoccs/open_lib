@@ -70,7 +70,9 @@ describe('OpenLibraryClient', () => {
     const fetchImpl = vi.fn(async () => {
       throw new TypeError('fetch failed');
     });
-    const error = await createClient(fetchImpl).getWork('OL1W').catch((err: unknown) => err);
+    const error = await createClient(fetchImpl)
+      .getWork('OL1W')
+      .catch((err: unknown) => err);
     expect(error).toBeInstanceOf(AppError);
     expect((error as AppError).code).toBe('UPSTREAM_ERROR');
     expect(fetchImpl).toHaveBeenCalledTimes(3);
