@@ -1,0 +1,125 @@
+{
+  "app": {
+    "name": "Mini Reading Tracker",
+    "nav": {
+      "search": "Tìm sách",
+      "shelf": "Tủ sách của tôi"
+    },
+    "footer": "Dữ liệu sách từ Open Library"
+  },
+  "status": {
+    "want_to_read": "Muốn đọc",
+    "reading": "Đang đọc",
+    "read": "Đã đọc"
+  },
+  "common": {
+    "retry": "Thử lại",
+    "cancel": "Huỷ",
+    "close": "Đóng",
+    "save": "Lưu",
+    "delete": "Xoá",
+    "loading": "Đang tải...",
+    "unknownAuthor": "Không rõ tác giả",
+    "pages": "{count} trang",
+    "noCover": "Không có ảnh bìa",
+    "coverAlt": "Ảnh bìa sách {title}"
+  },
+  "search": {
+    "title": "Tìm sách",
+    "label": "Tìm theo tên sách hoặc tác giả",
+    "placeholder": "Ví dụ: Harry Potter, Tolkien...",
+    "submit": "Tìm",
+    "hint": "Nhập tên sách hoặc tác giả để bắt đầu tìm kiếm.",
+    "resultCount": "Tìm thấy {total} kết quả cho \"{query}\"",
+    "empty": "Không tìm thấy sách nào cho \"{query}\".",
+    "emptyHint": "Hãy thử từ khoá khác hoặc kiểm tra lại chính tả.",
+    "addToShelf": "+ Thêm vào tủ",
+    "added": "Đã thêm",
+    "published": "Xuất bản {year}",
+    "viewDetail": "Xem chi tiết {title}"
+  },
+  "pagination": {
+    "label": "Phân trang",
+    "previous": "Trang trước",
+    "next": "Trang sau",
+    "page": "Trang {page}",
+    "summary": "Trang {page} / {total}"
+  },
+  "detail": {
+    "title": "Chi tiết sách",
+    "author": "Tác giả",
+    "published": "Năm xuất bản",
+    "pages": "Số trang",
+    "subjects": "Chủ đề",
+    "description": "Mô tả",
+    "noDescription": "Chưa có mô tả cho cuốn sách này.",
+    "unknown": "Không rõ",
+    "initialStatus": "Trạng thái ban đầu",
+    "totalPagesLabel": "Tổng số trang (Open Library chưa có dữ liệu)",
+    "addToShelf": "Thêm vào tủ",
+    "onShelf": "Sách đã có trong tủ của bạn — trạng thái: {status}",
+    "goToShelf": "Mở tủ sách",
+    "showMore": "Xem thêm",
+    "showLess": "Thu gọn"
+  },
+  "shelf": {
+    "title": "Tủ sách của tôi",
+    "tabs": "Lọc theo trạng thái",
+    "stats": {
+      "total": "Tổng số sách",
+      "reading": "Đang đọc",
+      "read": "Đã đọc xong"
+    },
+    "empty": {
+      "want_to_read": "Chưa có sách nào trong danh sách muốn đọc.",
+      "reading": "Bạn chưa đọc cuốn sách nào.",
+      "read": "Chưa có cuốn sách nào được đọc xong."
+    },
+    "findBooks": "Tìm sách để thêm",
+    "progress": "Tiến độ đọc",
+    "progressValue": "{current} / {total} trang",
+    "progressUnknown": "Chưa rõ tổng số trang",
+    "currentPage": "Trang đang đọc",
+    "totalPages": "Tổng số trang",
+    "updatePage": "Cập nhật",
+    "status": "Trạng thái",
+    "rating": "Đánh giá",
+    "ratingStar": "{count} sao",
+    "clearRating": "Bỏ đánh giá",
+    "note": "Ghi chú",
+    "notePlaceholder": "Ghi chú ngắn về cuốn sách...",
+    "noteCounter": "{count}/{max}",
+    "saveNote": "Lưu ghi chú",
+    "startedAt": "Bắt đầu: {date}",
+    "finishedAt": "Đọc xong: {date}",
+    "remove": "Xoá khỏi tủ",
+    "confirmRemoveTitle": "Xoá sách khỏi tủ?",
+    "confirmRemoveMessage": "\"{title}\" cùng tiến độ, đánh giá và ghi chú sẽ bị xoá. Thao tác này không thể hoàn tác."
+  },
+  "toast": {
+    "added": "Đã thêm \"{title}\" vào tủ sách.",
+    "alreadyOnShelf": "Sách này đã có trong tủ.",
+    "updated": "Đã cập nhật.",
+    "autoCompleted": "Chúc mừng! \"{title}\" đã được chuyển sang Đã đọc.",
+    "removed": "Đã xoá \"{title}\" khỏi tủ sách."
+  },
+  "validation": {
+    "pageRange": "Số trang phải từ 0 đến {max}.",
+    "totalPagesMin": "Tổng số trang phải lớn hơn 0.",
+    "noteTooLong": "Ghi chú tối đa {max} ký tự."
+  },
+  "errors": {
+    "VALIDATION_ERROR": "Dữ liệu không hợp lệ.",
+    "NOT_FOUND": "Không tìm thấy dữ liệu.",
+    "CONFLICT": "Sách này đã có trong tủ.",
+    "UPSTREAM_ERROR": "Không kết nối được tới Open Library. Vui lòng thử lại sau.",
+    "RATE_LIMITED": "Bạn thao tác quá nhanh, vui lòng thử lại sau ít phút.",
+    "INTERNAL_ERROR": "Đã có lỗi xảy ra phía máy chủ.",
+    "NETWORK_ERROR": "Không kết nối được tới máy chủ. Kiểm tra lại mạng của bạn.",
+    "UNKNOWN": "Đã có lỗi xảy ra."
+  },
+  "notFound": {
+    "title": "Không tìm thấy trang",
+    "back": "Về trang tìm kiếm"
+  }
+}
