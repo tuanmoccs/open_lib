@@ -179,6 +179,24 @@ describe('applyReadingChange - total pages corrections', () => {
     expect(result).toMatchObject({ status: 'read', currentPage: 400, finishedAt: T0 });
   });
 
+  it('keeps a read book complete when its total is lowered', () => {
+    const result = applyReadingChange(
+      state({ status: 'read', currentPage: 300, finishedAt: T0 }),
+      { totalPages: 200 },
+      T1,
+    );
+    expect(result).toMatchObject({ status: 'read', currentPage: 200, finishedAt: T0 });
+  });
+
+  it('page equal to total wins over an explicit status (rule: last page means read)', () => {
+    const result = applyReadingChange(
+      state({ status: 'reading', currentPage: 200, startedAt: T0 }),
+      { status: 'want_to_read', totalPages: 200 },
+      T1,
+    );
+    expect(result.status).toBe('read');
+  });
+
   it('completes a read book once its unknown total is filled in', () => {
     const result = applyReadingChange(
       state({ status: 'read', totalPages: null, finishedAt: T0 }),

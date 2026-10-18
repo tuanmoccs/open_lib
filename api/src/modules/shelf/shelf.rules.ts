@@ -38,6 +38,11 @@ export function applyReadingChange(
   let currentPage = change.currentPage ?? current.currentPage;
   let status = change.status ?? current.status;
 
+  // A finished book stays complete when its page count is corrected (up or down).
+  const keepsReadComplete =
+    current.status === 'read' && change.status === undefined && change.currentPage === undefined;
+  if (keepsReadComplete && totalPages !== null) currentPage = totalPages;
+
   if (change.currentPage !== undefined && change.currentPage > 0 && totalPages === null) {
     throw validationError('Total pages of this book is unknown; set totalPages first', [
       { field: 'totalPages', message: 'Required before tracking the current page' },
@@ -61,13 +66,8 @@ export function applyReadingChange(
   if (totalPages !== null) {
     if (change.status === 'read') {
       currentPage = totalPages;
-    } else if (
-      status === 'read' &&
-      change.status === undefined &&
-      change.currentPage === undefined
-    ) {
-      // A finished book stays complete when its page count is corrected.
-      currentPage = totalPages;
+    } else if (keepsReadComplete) {
+      // currentPage was already aligned with totalPages above.
     } else if (pagesChanged && currentPage === totalPages) {
       status = 'read';
     } else if (change.currentPage !== undefined && change.status === undefined && currentPage > 0) {
