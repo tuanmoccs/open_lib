@@ -1,0 +1,279 @@
+openapi: 3.0.3
+info:
+  title: Mini Reading Tracker API
+  version: 1.0.0
+  description: |
+    Backend for the Mini Reading Tracker. Proxies Open Library (search, work detail, covers)
+    and stores the personal bookshelf in MySQL. Single user, no authentication.
+
+    Every error uses the same body:
+    `{ "error": { "code": "VALIDATION_ERROR", "message": "...", "details": [{ "field": "...", "message": "..." }] } }`
+servers:
+  - url: /api
+tags:
+  - name: Books
+  - name: Shelf
+  - name: System
+
+paths:
+  /health:
+    get:
+      tags: [System]
+      summary: Liveness and database check
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: ok }
+
+  /books/search:
+    get:
+      tags: [Books]
+      summary: Search books by title or author (Open Library)
+      parameters:
+        - { name: q, in: query, required: true, schema: { type: string, maxLength: 200 }, example: the hobbit }
+        - { name: page, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 1 } }
+      responses:
+        '200':
+          description: One page of results (20 per page)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SearchResult' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '502': { $ref: '#/components/responses/UpstreamError' }
+
+  /books/{workId}:
+    get:
+      tags: [Books]
+      summary: Book detail
+      parameters:
+        - { name: workId, in: path, required: true, schema: { type: string, pattern: '^OL\d+W$' }, example: OL27482W }
+      responses:
+        '200':
+          description: Book detail, with the shelf entry when the book is on the shelf
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/BookDetail' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '502': { $ref: '#/components/responses/UpstreamError' }
+
+  /covers/{coverId}:
+    get:
+      tags: [Books]
+      summary: Cover image proxy
+      parameters:
+        - { name: coverId, in: path, required: true, schema: { type: integer, minimum: 1 }, example: 14627509 }
+        - { name: size, in: query, schema: { type: string, enum: [S, M, L], default: M } }
+      responses:
+        '200':
+          description: JPEG image
+          content:
+            image/jpeg: {}
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /shelf:
+    get:
+      tags: [Shelf]
+      summary: List shelf entries (most recently updated first)
+      parameters:
+        - { name: status, in: query, schema: { $ref: '#/components/schemas/ShelfStatus' } }
+      responses:
+        '200':
+          description: Entries
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/ShelfEntry' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+    post:
+      tags: [Shelf]
+      summary: Add a book to the shelf
+      description: |
+        Book metadata is fetched from Open Library by the server. `totalPages` is only needed
+        when Open Library has no page count for the book.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [workId]
+              additionalProperties: false
+              properties:
+                workId: { type: string, example: OL27482W }
+                status: { $ref: '#/components/schemas/ShelfStatus' }
+                totalPages: { type: integer, minimum: 1, maximum: 100000 }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ShelfEntry' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: The book is already on the shelf
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /shelf/stats:
+    get:
+      tags: [Shelf]
+      summary: Shelf counters
+      responses:
+        '200':
+          description: Counts per status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total: { type: integer }
+                  want_to_read: { type: integer }
+                  reading: { type: integer }
+                  read: { type: integer }
+
+  /shelf/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: integer, minimum: 1 } }
+    patch:
+      tags: [Shelf]
+      summary: Update progress, status, rating or note
+      description: |
+        Business rules:
+        - `0 <= currentPage <= totalPages`; tracking pages requires a known `totalPages`
+        - reaching the last page switches the status to `read`
+        - logging a page below the total (without a status) switches to `reading`
+        - first switch to `reading` records `startedAt`; switching to `read` records `finishedAt`
+        - `rating` is an integer 1..5 or `null`; an empty `note` clears it
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              minProperties: 1
+              properties:
+                status: { $ref: '#/components/schemas/ShelfStatus' }
+                currentPage: { type: integer, minimum: 0 }
+                totalPages: { type: integer, minimum: 1 }
+                rating: { type: integer, minimum: 1, maximum: 5, nullable: true }
+                note: { type: string, maxLength: 500, nullable: true }
+      responses:
+        '200':
+          description: Updated entry
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ShelfEntry' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [Shelf]
+      summary: Remove a book from the shelf
+      responses:
+        '204': { description: Deleted }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+components:
+  schemas:
+    ShelfStatus:
+      type: string
+      enum: [want_to_read, reading, read]
+    BookSummary:
+      type: object
+      properties:
+        workId: { type: string, example: OL27482W }
+        title: { type: string }
+        authors: { type: array, items: { type: string } }
+        coverId: { type: integer, nullable: true }
+        firstPublishYear: { type: integer, nullable: true }
+        numberOfPages: { type: integer, nullable: true }
+    SearchResult:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            allOf:
+              - $ref: '#/components/schemas/BookSummary'
+              - type: object
+                properties:
+                  inShelf: { type: boolean }
+        page: { type: integer }
+        limit: { type: integer }
+        total: { type: integer }
+        totalPages: { type: integer }
+    BookDetail:
+      allOf:
+        - $ref: '#/components/schemas/BookSummary'
+        - type: object
+          properties:
+            description: { type: string, nullable: true }
+            subjects: { type: array, items: { type: string } }
+            shelfEntry:
+              nullable: true
+              allOf:
+                - $ref: '#/components/schemas/ShelfEntry'
+    ShelfEntry:
+      type: object
+      properties:
+        id: { type: integer }
+        workId: { type: string }
+        title: { type: string }
+        authors: { type: array, items: { type: string } }
+        coverId: { type: integer, nullable: true }
+        firstPublishYear: { type: integer, nullable: true }
+        status: { $ref: '#/components/schemas/ShelfStatus' }
+        currentPage: { type: integer }
+        totalPages: { type: integer, nullable: true }
+        progress: { type: integer, nullable: true, description: Percentage 0-100 }
+        rating: { type: integer, nullable: true }
+        note: { type: string, nullable: true }
+        startedAt: { type: string, format: date-time, nullable: true }
+        finishedAt: { type: string, format: date-time, nullable: true }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              enum: [VALIDATION_ERROR, NOT_FOUND, CONFLICT, UPSTREAM_ERROR, RATE_LIMITED, INTERNAL_ERROR]
+            message: { type: string }
+            details:
+              type: array
+              items:
+                type: object
+                properties:
+                  field: { type: string }
+                  message: { type: string }
+  responses:
+    ValidationError:
+      description: Invalid input
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    UpstreamError:
+      description: Open Library is unavailable
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }

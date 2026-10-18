@@ -1,9 +1,13 @@
 import { randomUUID } from 'node:crypto';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import cors from 'cors';
 import express, { Router } from 'express';
 import { rateLimit } from 'express-rate-limit';
 import helmet from 'helmet';
 import { pinoHttp } from 'pino-http';
+import swaggerUi from 'swagger-ui-express';
+import { parse as parseYaml } from 'yaml';
 import { AppError } from './lib/errors';
 import type { Logger } from './lib/logger';
 import { errorHandler, notFoundHandler } from './middleware/error-handler';
@@ -22,6 +26,9 @@ export interface AppOptions {
   bookService: BookService;
   shelfService: ShelfService;
 }
+
+// Resolves to api/openapi.yaml both from src/ (dev) and dist/ (production build).
+const OPENAPI_PATH = path.resolve(__dirname, '..', 'openapi.yaml');
 
 export function createApp(options: AppOptions) {
   const app = express();
@@ -63,6 +70,11 @@ export function createApp(options: AppOptions) {
   api.get('/health', async (_req, res) => {
     await options.healthCheck();
     res.json({ status: 'ok' });
+  });
+  const openApiDocument = parseYaml(readFileSync(OPENAPI_PATH, 'utf8'));
+  api.use('/docs', swaggerUi.serve, swaggerUi.setup(openApiDocument));
+  api.get('/openapi.json', (_req, res) => {
+    res.json(openApiDocument);
   });
   api.use('/books', bookRoutes(options.bookService));
   api.use('/covers', coverRoutes(options.openLibrary));
