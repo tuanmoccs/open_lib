@@ -160,6 +160,35 @@ describe('applyReadingChange', () => {
   });
 });
 
+describe('applyReadingChange - total pages corrections', () => {
+  it('marks as read when the total is lowered to the current page', () => {
+    const result = applyReadingChange(
+      state({ status: 'reading', currentPage: 200, startedAt: T0 }),
+      { totalPages: 200 },
+      T1,
+    );
+    expect(result).toMatchObject({ status: 'read', currentPage: 200, finishedAt: T1 });
+  });
+
+  it('keeps a read book complete when its total is raised', () => {
+    const result = applyReadingChange(
+      state({ status: 'read', currentPage: 300, finishedAt: T0 }),
+      { totalPages: 400 },
+      T1,
+    );
+    expect(result).toMatchObject({ status: 'read', currentPage: 400, finishedAt: T0 });
+  });
+
+  it('completes a read book once its unknown total is filled in', () => {
+    const result = applyReadingChange(
+      state({ status: 'read', totalPages: null, finishedAt: T0 }),
+      { totalPages: 250 },
+      T1,
+    );
+    expect(result).toMatchObject({ status: 'read', currentPage: 250, totalPages: 250 });
+  });
+});
+
 describe('progressPercent', () => {
   it('returns null when the total is unknown', () => {
     expect(progressPercent(10, null)).toBeNull();

@@ -21,7 +21,8 @@ export interface ReadingStateChange {
 /**
  * Applies a change to the reading state and enforces the business rules:
  * - 0 <= currentPage <= totalPages (a page can only be tracked once totalPages is known)
- * - currentPage reaching totalPages automatically marks the book as "read"
+ * - currentPage reaching totalPages (by changing either value) automatically marks the book as "read"
+ * - correcting totalPages of a "read" book keeps it complete
  * - logging a page below totalPages (without an explicit status) marks the book as "reading"
  * - switching to "read" moves currentPage to the last page
  * - startedAt is recorded the first time the book becomes "reading" and never overwritten
@@ -56,12 +57,16 @@ export function applyReadingChange(
     currentPage = 0;
   }
 
-  if (change.status === 'read' && totalPages !== null) {
-    currentPage = totalPages;
-  } else if (change.currentPage !== undefined && totalPages !== null) {
-    if (currentPage === totalPages) {
+  const pagesChanged = change.currentPage !== undefined || change.totalPages !== undefined;
+  if (totalPages !== null) {
+    if (change.status === 'read') {
+      currentPage = totalPages;
+    } else if (status === 'read' && change.status === undefined && change.currentPage === undefined) {
+      // A finished book stays complete when its page count is corrected.
+      currentPage = totalPages;
+    } else if (pagesChanged && currentPage === totalPages) {
       status = 'read';
-    } else if (change.status === undefined && currentPage > 0) {
+    } else if (change.currentPage !== undefined && change.status === undefined && currentPage > 0) {
       // Logging pages on a "want to read" / "read" book means it is being read (again).
       status = 'reading';
     }
