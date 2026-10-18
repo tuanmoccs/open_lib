@@ -2,6 +2,7 @@ import { createApp } from './app';
 import { loadEnv } from './config/env';
 import { createDb } from './db/knex';
 import { runMigrations } from './db/migrate';
+import { seedSampleData } from './db/seed';
 import { createLogger } from './lib/logger';
 import { BookService } from './modules/books/book.service';
 import { OpenLibraryClient } from './modules/open-library/open-library.client';
@@ -16,6 +17,10 @@ async function main() {
   if (env.RUN_MIGRATIONS) {
     const { applied } = await runMigrations(db);
     logger.info({ applied }, 'Database migrations up to date');
+  }
+  if (env.RUN_SEED) {
+    const inserted = await seedSampleData(db);
+    if (inserted > 0) logger.info({ inserted }, 'Sample shelf data inserted');
   }
 
   const openLibrary = new OpenLibraryClient({
