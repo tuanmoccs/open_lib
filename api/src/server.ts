@@ -6,6 +6,7 @@ import { createLogger } from './lib/logger';
 import { BookService } from './modules/books/book.service';
 import { OpenLibraryClient } from './modules/open-library/open-library.client';
 import { KnexShelfRepository } from './modules/shelf/shelf.repository';
+import { ShelfService } from './modules/shelf/shelf.service';
 
 async function main() {
   const env = loadEnv();
@@ -26,6 +27,7 @@ async function main() {
   });
   const shelfRepository = new KnexShelfRepository(db);
   const bookService = new BookService(openLibrary, shelfRepository);
+  const shelfService = new ShelfService(shelfRepository, bookService);
 
   const app = createApp({
     logger,
@@ -36,6 +38,7 @@ async function main() {
     rateLimitPerMinute: env.RATE_LIMIT_PER_MINUTE,
     openLibrary,
     bookService,
+    shelfService,
     healthCheck: async () => {
       await db.raw('SELECT 1');
     },

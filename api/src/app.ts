@@ -9,6 +9,8 @@ import type { Logger } from './lib/logger';
 import { errorHandler, notFoundHandler } from './middleware/error-handler';
 import { bookRoutes, coverRoutes } from './modules/books/book.routes';
 import type { BookService, OpenLibraryGateway } from './modules/books/book.service';
+import { shelfRoutes } from './modules/shelf/shelf.routes';
+import type { ShelfService } from './modules/shelf/shelf.service';
 
 export interface AppOptions {
   logger: Logger;
@@ -18,6 +20,7 @@ export interface AppOptions {
   healthCheck: () => Promise<void>;
   openLibrary: OpenLibraryGateway;
   bookService: BookService;
+  shelfService: ShelfService;
 }
 
 export function createApp(options: AppOptions) {
@@ -63,6 +66,7 @@ export function createApp(options: AppOptions) {
   });
   api.use('/books', bookRoutes(options.bookService));
   api.use('/covers', coverRoutes(options.openLibrary));
+  api.use('/shelf', shelfRoutes(options.shelfService));
 
   app.use('/api', api);
   app.use(notFoundHandler);
