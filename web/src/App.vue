@@ -1,8 +1,25 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useRoute, useRouter } from 'vue-router';
+import BookDetailModal from '@/components/BookDetailModal.vue';
 import ToastList from '@/components/ToastList.vue';
 
 const { t } = useI18n();
+const route = useRoute();
+const router = useRouter();
+
+// The book detail screen is a modal addressed by ?book=<workId>, so it can be opened
+// from any page, shared as a link and closed with the browser back button.
+const detailWorkId = computed(() => {
+  const book = route.query.book;
+  return typeof book === 'string' && /^OL\d+W$/.test(book) ? book : null;
+});
+
+function closeDetail() {
+  const { book: _book, ...query } = route.query;
+  void router.push({ query });
+}
 </script>
 
 <template>
@@ -40,6 +57,7 @@ const { t } = useI18n();
       {{ t('app.footer') }}
     </footer>
 
+    <BookDetailModal v-if="detailWorkId" :work-id="detailWorkId" @close="closeDetail" />
     <ToastList />
   </div>
 </template>

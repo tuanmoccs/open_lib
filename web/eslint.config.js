@@ -15,6 +15,10 @@ export default tseslint.config(
   {
     languageOptions: { globals: globals.browser },
     rules: {
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
+      ],
       'vue/multi-word-component-names': 'off',
       // Formatting is handled by Prettier.
       'vue/max-attributes-per-line': 'off',
