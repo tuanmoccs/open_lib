@@ -62,6 +62,8 @@ export function createApp(options: AppOptions) {
       limit: options.rateLimitPerMinute,
       standardHeaders: 'draft-8',
       legacyHeaders: false,
+      // Covers are immutable and cached by the browser; one search page alone loads ~20 of them.
+      skip: (req) => req.path.startsWith('/covers/'),
       handler: (_req, _res, next) =>
         next(new AppError(429, 'RATE_LIMITED', 'Too many requests, please slow down')),
     }),
