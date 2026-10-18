@@ -1,0 +1,26 @@
+# Edge reverse proxy. With a domain name as SITE_ADDRESS, Caddy obtains and renews
+# Let's Encrypt certificates automatically and redirects HTTP to HTTPS.
+{$SITE_ADDRESS} {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		X-Frame-Options "DENY"
+		-Server
+	}
+
+	handle /api/* {
+		reverse_proxy api:3000
+	}
+
+	handle {
+		reverse_proxy web:8080
+	}
+
+	log {
+		output stdout
+		format console
+	}
+}
